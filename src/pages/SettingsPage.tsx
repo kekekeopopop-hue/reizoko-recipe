@@ -5,18 +5,11 @@ import { Segment } from "../components/Segment";
 import { Switch } from "../components/Switch";
 import { exportBackup, importBackup, parseBackup } from "../db/backup";
 import { db, updateSettings } from "../db/db";
-import { GEMINI_BASE_URL, type EngineConfig, type EngineKind, type Settings } from "../db/schema";
-import { listModels } from "../llm/adapter";
+import { CUSTOM_PRESETS, DEFAULT_GEMINI_EXTRA, GEMINI_BASE_URL, type EngineConfig, type EngineKind, type Settings } from "../db/schema";
+import { listModels, parseExtra } from "../llm/adapter";
 
 const SERVINGS = [1, 2, 3, 4, 5, 6].map((n) => ({ value: n, label: `${n}` }));
 
-/** 中国からも日本からも VPN なしで届き、ブラウザ直接呼び出し（CORS）が通ることを確認済みのもの */
-const PRESETS = [
-  { label: "Qwen (Alibaba 中国)", baseURL: "https://dashscope.aliyuncs.com/compatible-mode/v1", model: "qwen3.8-flash" },
-  { label: "Qwen (Alibaba 国際)", baseURL: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1", model: "qwen3.8-flash" },
-  { label: "DeepSeek", baseURL: "https://api.deepseek.com", model: "deepseek-flash" },
-  { label: "Kimi (Moonshot)", baseURL: "https://api.moonshot.cn/v1", model: "kimi-latest" },
-];
 
 export function SettingsPage() {
   const settings = useLiveQuery(() => db.settings.get(1), []);
@@ -26,6 +19,7 @@ export function SettingsPage() {
   const [msg, setMsg] = useState<string | null>(null);
   const [models, setModels] = useState<string[] | null>(null);
   const [busy, setBusy] = useState(false);
+  const [extraError, setExtraError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   if (!settings) return <div className="page with-tabs" />;
@@ -81,16 +75,16 @@ export function SettingsPage() {
       <Segment
         options={[{ value: "gemini", label: "Gemini" }, { value: "custom", label: "カスタム (OpenAI互換)" }]}
         value={engine}
-        onChange={(v) => { setModels(null); void updateSettings({ engine: v }); }}
+        onChange={(v) => { setModels(null); setExtraError(null); void updateSettings({ engine: v }); }}
       />
       <div style={{ height: 12 }} />
       {engine === "custom" && (
         <div className="field">
           <label>プリセット（baseURL とモデル名を入れます。API キーは別途入力）</label>
           <div className="models" style={{ marginBottom: 12 }}>
-            {PRESETS.map((p) => (
+            {CUSTOM_PRESETS.map((p) => (
               <button key={p.label} type="button" className={cfg.baseURL === p.baseURL ? "on" : ""}
-                onClick={() => { setModels(null); void setCfg({ baseURL: p.baseURL, model: p.model }); }}>{p.label}</button>
+                onClick={() => { setModels(null); setExtraError(null); void setCfg({ baseURL: p.baseURL, model: p.model, extra: p.extra }); }}>{p.label}</button>
             ))}
           </div>
           <label>baseURL（例: https://mac.tailnet.ts.net/v1）</label>
@@ -119,6 +113,29 @@ export function SettingsPage() {
               <button key={m} type="button" className={m === cfg.model ? "on" : ""} onClick={() => void setCfg({ model: m })}>{m}</button>
             ))}
           </div>
+        )}
+      </div>
+
+      <div className="field">
+        <label>追加パラメータ（JSON。リクエスト本文にそのまま足します。thinking の無効化など）</label>
+        <textarea key={`${engine}-extra-${cfg.extra ?? ""}`} className="mono" rows={2} defaultValue={cfg.extra ?? ""} autoCapitalize="off" autoCorrect="off"
+          placeholder={engine === "gemini" ? DEFAULT_GEMINI_EXTRA : '{"enable_thinking":false}'}
+          onBlur={(e) => {
+            const v = e.target.value.trim();
+            try {
+              parseExtra(v);
+              setExtraError(null);
+              void setCfg({ extra: v });
+            } catch (err) {
+              setExtraError(err instanceof Error ? err.message : String(err));
+            }
+          }} />
+        {extraError && <div className="error">{extraError}</div>}
+        {engine === "gemini" && !(cfg.extra ?? "").trim() && (
+          <button type="button" className="btn small" style={{ marginTop: 8 }}
+            onClick={() => { setExtraError(null); void setCfg({ extra: DEFAULT_GEMINI_EXTRA }); }}>
+            推奨値を入れる（{DEFAULT_GEMINI_EXTRA}）
+          </button>
         )}
       </div>
 

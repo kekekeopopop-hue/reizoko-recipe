@@ -28,7 +28,11 @@ export function buildMessages(input: SuggestInput): ChatMessage[] {
   lines.push("- 手持ちの食材と常備調味料でできる料理を優先する。3件は方向性を変える");
   lines.push("- 手持ちにも常備調味料にもない材料は missing_ingredients に列挙する。少ないほど良い");
   lines.push("- ingredients には分量を人数分で書く。調味料も含める");
-  lines.push("- steps は各1〜2文で簡潔に。番号は付けない");
+  lines.push("- steps は料理初心者がそのまま作れる詳しさで書く。5〜8手順を目安に、各手順に次を含める:");
+  lines.push("  切り方（大きさ・厚さ）、火加減、加熱時間の目安、材料と調味料を入れる順番、仕上がりの目安（色・音・食感）");
+  lines.push("- 下ごしらえ（下味、水切り、解凍など）は独立した手順にする");
+  lines.push("- 失敗しやすい点や代替のコツがあれば、該当する手順の末尾に一言添える");
+  lines.push("- 手順に番号は付けない");
   lines.push("- time_min は調理時間の目安（分）");
   lines.push("- すべて日本語");
 

@@ -1,6 +1,6 @@
 import Dexie, { type EntityTable } from "dexie";
 import type { Ingredient, Rating, Recipe, Seasoning, Settings } from "./schema";
-import { DEFAULT_SETTINGS } from "./schema";
+import { CUSTOM_PRESETS, DEFAULT_GEMINI_EXTRA, DEFAULT_SETTINGS } from "./schema";
 import { INGREDIENTS, SEASONINGS } from "./seed-ingredients";
 
 export class RecipeDB extends Dexie {
@@ -35,8 +35,16 @@ export async function ensureSeeded(): Promise<void> {
     if ((await db.seasonings.count()) === 0) {
       await db.seasonings.bulkAdd(SEASONINGS.map((x) => ({ ...x })));
     }
-    if (!(await db.settings.get(1))) {
+    const s = await db.settings.get(1);
+    if (!s) {
       await db.settings.add(DEFAULT_SETTINGS);
+    } else if (s.gemini.extra === undefined || s.custom.extra === undefined) {
+      // extra 追加前に作られた設定行への一度きりの補完。プリセット由来の baseURL ならその extra を入れる
+      const preset = CUSTOM_PRESETS.find((p) => p.baseURL === s.custom.baseURL);
+      await db.settings.update(1, {
+        gemini: { ...s.gemini, extra: s.gemini.extra ?? DEFAULT_GEMINI_EXTRA },
+        custom: { ...s.custom, extra: s.custom.extra ?? preset?.extra ?? "" },
+      });
     }
   });
 }

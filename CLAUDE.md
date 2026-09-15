@@ -195,7 +195,10 @@ settings     { id: 1,
 ### adapter
 
 ```ts
-type Engine = { baseURL: string; model: string; apiKey: string };
+type Engine = { baseURL: string; model: string; apiKey: string; extra?: string };
+// extra: リクエスト本文にそのままマージする追加パラメータ（JSON 文字列）。
+//   Qwen3 系は thinking が既定 ON で 90 秒近くかかるので `{"enable_thinking":false}`、
+//   Gemini は `{"reasoning_effort":"low"}` を既定にする。provider 分岐はこの設定値で吸収する
 
 // 既定 (gemini)
 //   baseURL: "https://generativelanguage.googleapis.com/v1beta/openai"
@@ -209,7 +212,7 @@ type Engine = { baseURL: string; model: string; apiKey: string };
 
 // POST `${baseURL}/chat/completions`
 //   headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }
-//   body:    { model, messages, response_format: { type: "json_schema", json_schema: {...} } }
+//   body:    { ...JSON.parse(extra), model, messages, response_format: { type: "json_schema", json_schema: {...} } }
 ```
 
 engine の違いは設定値の差だけで吸収する。分岐コードを書かない。
@@ -244,6 +247,8 @@ structured outputs（JSON schema 指定）を必ず使う。
 ```
 
 recipes は3件。missing_ingredients は選択食材にも常備調味料にも含まれないものを列挙させる。
+
+steps は「料理初心者がそのまま作れる詳しさ」を指示する。切り方・火加減・加熱時間・入れる順番・仕上がりの目安を各手順に含め、下ごしらえは独立した手順にする。5〜8 手順が目安。簡潔さを優先させると手順が雑になるので、短くする指示は書かない。
 
 パースに失敗した場合は1回だけリトライし、それでも失敗したら生テキストを表示するフォールバックに落とす。
 

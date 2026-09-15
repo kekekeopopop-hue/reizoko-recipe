@@ -32,11 +32,27 @@ function responseFormat(mode: JsonMode): Record<string, unknown> | undefined {
   return undefined;
 }
 
+/** 設定の追加パラメータ（JSON 文字列）をオブジェクトにする。空なら {}。壊れていれば LLMError */
+export function parseExtra(extra: string | undefined): Record<string, unknown> {
+  const t = (extra ?? "").trim();
+  if (!t) return {};
+  let v: unknown;
+  try {
+    v = JSON.parse(t);
+  } catch {
+    throw new LLMError("追加パラメータが JSON として読めません。設定タブを確認してください");
+  }
+  if (!v || typeof v !== "object" || Array.isArray(v)) throw new LLMError("追加パラメータは JSON オブジェクトにしてください");
+  return v as Record<string, unknown>;
+}
+
 async function postChat(engine: EngineConfig, messages: ChatMessage[], mode: JsonMode, signal?: AbortSignal): Promise<Response> {
+  // extra を先に展開し、model / messages / response_format は上書きされないようにする
+  const body = { ...parseExtra(engine.extra), model: engine.model, messages, ...responseFormat(mode) };
   return fetch(`${normalizeBase(engine.baseURL)}/chat/completions`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${engine.apiKey}` },
-    body: JSON.stringify({ model: engine.model, messages, ...responseFormat(mode) }),
+    body: JSON.stringify(body),
     signal,
   });
 }

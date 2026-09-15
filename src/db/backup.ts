@@ -12,8 +12,8 @@ type Backup = {
   recipes: Recipe[];
   ratings: Rating[];
   settings: Omit<Settings, "gemini" | "custom"> & {
-    gemini: { baseURL: string; model: string };
-    custom: { baseURL: string; model: string };
+    gemini: { baseURL: string; model: string; extra?: string };
+    custom: { baseURL: string; model: string; extra?: string };
   };
 };
 
@@ -30,8 +30,8 @@ export async function buildBackup(): Promise<Backup> {
     // API キーは含めない
     settings: {
       ...s,
-      gemini: { baseURL: s.gemini.baseURL, model: s.gemini.model },
-      custom: { baseURL: s.custom.baseURL, model: s.custom.model },
+      gemini: { baseURL: s.gemini.baseURL, model: s.gemini.model, extra: s.gemini.extra ?? "" },
+      custom: { baseURL: s.custom.baseURL, model: s.custom.model, extra: s.custom.extra ?? "" },
     },
   };
 }
