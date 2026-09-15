@@ -58,7 +58,7 @@ export type Settings = {
 };
 
 export const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai";
-export const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
+export const DEFAULT_GEMINI_MODEL = "gemini-3.8-flash";
 
 export const DEFAULT_SETTINGS: Settings = {
   id: 1,
