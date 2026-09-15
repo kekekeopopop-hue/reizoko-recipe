@@ -19,34 +19,54 @@ function normalizeBase(baseURL: string): string {
   return baseURL.trim().replace(/\/+$/, "");
 }
 
-async function chatCompletion(engine: EngineConfig, messages: ChatMessage[], signal?: AbortSignal): Promise<string> {
-  const res = await fetch(`${normalizeBase(engine.baseURL)}/chat/completions`, {
+type JsonMode = "json_schema" | "json_object" | "none";
+const MODE_ORDER: JsonMode[] = ["json_schema", "json_object", "none"];
+/** baseURL ごとに、通った出力方式を覚えておく（同じ 400 を毎回踏まないため） */
+const modeCache = new Map<string, JsonMode>();
+
+function responseFormat(mode: JsonMode): Record<string, unknown> | undefined {
+  if (mode === "json_schema") {
+    return { response_format: { type: "json_schema", json_schema: { name: "recipes", schema: RECIPES_JSON_SCHEMA } } };
+  }
+  if (mode === "json_object") return { response_format: { type: "json_object" } };
+  return undefined;
+}
+
+async function postChat(engine: EngineConfig, messages: ChatMessage[], mode: JsonMode, signal?: AbortSignal): Promise<Response> {
+  return fetch(`${normalizeBase(engine.baseURL)}/chat/completions`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${engine.apiKey}`,
-    },
-    body: JSON.stringify({
-      model: engine.model,
-      messages,
-      response_format: {
-        type: "json_schema",
-        json_schema: { name: "recipes", schema: RECIPES_JSON_SCHEMA },
-      },
-    }),
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${engine.apiKey}` },
+    body: JSON.stringify({ model: engine.model, messages, ...responseFormat(mode) }),
     signal,
   });
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    throw new LLMError(`HTTP ${res.status}: ${body.slice(0, 300)}`);
+}
+
+/**
+ * structured outputs を最優先し、provider が response_format を受け付けない（400）ときは
+ * json_object、さらにダメなら指定なしに落とす。プロンプト側にもスキーマを書いてあるので
+ * どの方式でも同じ形の JSON が返る前提
+ */
+async function chatCompletion(engine: EngineConfig, messages: ChatMessage[], signal?: AbortSignal): Promise<string> {
+  const base = normalizeBase(engine.baseURL);
+  const start = MODE_ORDER.indexOf(modeCache.get(base) ?? "json_schema");
+  let res: Response | null = null;
+  for (let i = start; i < MODE_ORDER.length; i++) {
+    const mode = MODE_ORDER[i];
+    res = await postChat(engine, messages, mode, signal);
+    if (res.ok) {
+      modeCache.set(base, mode);
+      break;
+    }
+    if (res.status !== 400 || mode === "none") break;
+    // 400 は response_format 非対応の可能性が高いので次の方式へ
   }
-  const json = (await res.json()) as {
-    choices?: { message?: { content?: string | null } }[];
-  };
+  if (!res || !res.ok) {
+    const body = res ? await res.text().catch(() => "") : "";
+    throw new LLMError(`HTTP ${res?.status ?? 0}: ${body.slice(0, 300)}`);
+  }
+  const json = (await res.json()) as { choices?: { message?: { content?: string | null } }[] };
   const content = json.choices?.[0]?.message?.content;
-  if (typeof content !== "string" || !content.trim()) {
-    throw new LLMError("応答が空でした");
-  }
+  if (typeof content !== "string" || !content.trim()) throw new LLMError("応答が空でした");
   return content;
 }
 

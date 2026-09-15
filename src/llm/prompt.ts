@@ -35,7 +35,11 @@ export function buildMessages(input: SuggestInput): ChatMessage[] {
   return [
     {
       role: "system",
-      content: "あなたは家庭料理のレシピ提案アシスタント。指定された JSON スキーマに従って、レシピをちょうど3件返す。",
+      content: [
+        "あなたは家庭料理のレシピ提案アシスタント。次の形の JSON だけを返す。説明文やマークダウンは付けない。",
+        '{"recipes":[{"title":"料理名","time_min":調理時間の分(整数),"ingredients":[{"name":"材料名","amount":"分量"}],"missing_ingredients":["手持ちにない材料"],"steps":["手順1","手順2"]}]}',
+        "recipes はちょうど3件。",
+      ].join("\n"),
     },
     { role: "user", content: lines.join("\n") },
   ];

@@ -10,6 +10,14 @@ import { listModels } from "../llm/adapter";
 
 const SERVINGS = [1, 2, 3, 4, 5, 6].map((n) => ({ value: n, label: `${n}` }));
 
+/** 中国からも日本からも VPN なしで届き、ブラウザ直接呼び出し（CORS）が通ることを確認済みのもの */
+const PRESETS = [
+  { label: "Qwen (Alibaba 中国)", baseURL: "https://dashscope.aliyuncs.com/compatible-mode/v1", model: "qwen3.8-flash" },
+  { label: "Qwen (Alibaba 国際)", baseURL: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1", model: "qwen3.8-flash" },
+  { label: "DeepSeek", baseURL: "https://api.deepseek.com", model: "deepseek-flash" },
+  { label: "Kimi (Moonshot)", baseURL: "https://api.moonshot.cn/v1", model: "kimi-latest" },
+];
+
 export function SettingsPage() {
   const settings = useLiveQuery(() => db.settings.get(1), []);
   const seasonings = useLiveQuery(() => db.seasonings.toArray(), []);
@@ -78,8 +86,15 @@ export function SettingsPage() {
       <div style={{ height: 12 }} />
       {engine === "custom" && (
         <div className="field">
+          <label>プリセット（baseURL とモデル名を入れます。API キーは別途入力）</label>
+          <div className="models" style={{ marginBottom: 12 }}>
+            {PRESETS.map((p) => (
+              <button key={p.label} type="button" className={cfg.baseURL === p.baseURL ? "on" : ""}
+                onClick={() => { setModels(null); void setCfg({ baseURL: p.baseURL, model: p.model }); }}>{p.label}</button>
+            ))}
+          </div>
           <label>baseURL（例: https://mac.tailnet.ts.net/v1）</label>
-          <input key={`${engine}-base`} className="mono" defaultValue={cfg.baseURL} inputMode="url" autoCapitalize="off" autoCorrect="off"
+          <input key={`${engine}-base-${cfg.baseURL}`} className="mono" defaultValue={cfg.baseURL} inputMode="url" autoCapitalize="off" autoCorrect="off"
             placeholder="https://.../v1" onBlur={(e) => void setCfg({ baseURL: e.target.value.trim() })} />
         </div>
       )}
