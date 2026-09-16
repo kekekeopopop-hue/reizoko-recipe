@@ -32,8 +32,11 @@ export async function ensureSeeded(): Promise<void> {
         INGREDIENTS.map((x, i) => ({ ...x, sort_order: i, use_count: 0, is_active: true })),
       );
     }
-    if ((await db.seasonings.count()) === 0) {
-      await db.seasonings.bulkAdd(SEASONINGS.map((x) => ({ ...x })));
+    // 調味料は seed に後から足した分も既存端末に届くよう、未登録の名前だけ追記する。既存の ON/OFF は触らない
+    const existing = new Set((await db.seasonings.toArray()).map((x) => x.name));
+    const missing = SEASONINGS.filter((x) => !existing.has(x.name));
+    if (missing.length > 0) {
+      await db.seasonings.bulkAdd(missing.map((x) => ({ ...x })));
     }
     const s = await db.settings.get(1);
     if (!s) {

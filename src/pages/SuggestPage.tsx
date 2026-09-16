@@ -18,6 +18,7 @@ export function SuggestPage() {
   const [freeOpen, setFreeOpen] = useState(false);
   const [freeText, setFreeText] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
 
   const ingredients = useLiveQuery(() => db.ingredients.filter((x) => x.is_active).sortBy("sort_order"), []);
   const settings = useLiveQuery(() => db.settings.get(1), []);
@@ -35,6 +36,13 @@ export function SuggestPage() {
   useEffect(() => {
     if (tab === null && ingredients) setTab(frequent.length > 0 ? "frequent" : "vegetable");
   }, [tab, ingredients, frequent.length]);
+
+  // 編集モードは「よく使う」タブ限定。タブを離れるか一覧が空になったら抜ける
+  useEffect(() => {
+    if (tab !== "frequent" || frequent.length === 0) setEditing(false);
+  }, [tab, frequent.length]);
+
+  const removeFromFrequent = (id: number) => void db.ingredients.update(id, { use_count: 0 });
 
   const visible = useMemo(() => {
     if (!ingredients || !tab) return [];
@@ -113,13 +121,25 @@ export function SuggestPage() {
               <button key={c.id} type="button" className={tab === c.id ? "on" : ""} onClick={() => setTab(c.id)}>{c.label}</button>
             ))}
           </div>
+          {tab === "frequent" && visible.length > 0 && (
+            <div className="grid-head">
+              <span className="hint">{editing ? "タップで「よく使う」から外します。使えばまた戻ります" : "使った回数の多い順"}</span>
+              <button type="button" className="link" onClick={() => setEditing((v) => !v)}>{editing ? "完了" : "編集"}</button>
+            </div>
+          )}
           {tab === "frequent" && visible.length === 0 ? (
             <div className="empty">提案を出すと、よく使う食材がここに並びます</div>
           ) : (
-            <div className="grid">
+            <div className={editing ? "grid editing" : "grid"}>
               {visible.map((x) => (
-                <button key={x.id} type="button" className={s.selectedIds.has(x.id!) ? "on" : ""} onClick={() => s.toggle(x.id!)}>
+                <button
+                  key={x.id}
+                  type="button"
+                  className={!editing && s.selectedIds.has(x.id!) ? "on" : ""}
+                  onClick={() => (editing ? removeFromFrequent(x.id!) : s.toggle(x.id!))}
+                >
                   {x.name}
+                  {editing && <span className="rm" aria-hidden="true">×</span>}
                 </button>
               ))}
             </div>

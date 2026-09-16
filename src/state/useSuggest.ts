@@ -4,6 +4,9 @@ import { suggestRecipes } from "../llm/adapter";
 import { buildMessages } from "../llm/prompt";
 import { useSession } from "./session";
 
+const USE_COUNT_DECAY = 0.9;
+const USE_COUNT_FLOOR = 0.05;
+
 export type SuggestOutcome = { ok: true } | { ok: false; reason: "not-configured" | "error"; message: string };
 
 /** 提案の実行。use_count 加算と last_selection 保存もここで行う */
@@ -37,10 +40,18 @@ export function useSuggest() {
 
       if (!opts.another) {
         await db.transaction("rw", db.ingredients, db.settings, async () => {
-          for (const id of ids) {
-            const r = await db.ingredients.get(id);
-            if (r) await db.ingredients.update(id, { use_count: r.use_count + 1 });
-          }
+          // 使わなくなった食材が「よく使う」に居座らないよう、提案のたびに全体を減衰させてから選んだ分を加算する
+          // 0.9 倍なので約 7 回で半減。小さくなりすぎた値は 0 に丸めて「使ったことがある」扱いから外す
+          await db.ingredients.toCollection().modify((r) => {
+            if (r.use_count > 0) {
+              const v = r.use_count * USE_COUNT_DECAY;
+              r.use_count = v < USE_COUNT_FLOOR ? 0 : v;
+            }
+          });
+          const sel = new Set(ids);
+          await db.ingredients.where("id").anyOf(ids).modify((r) => {
+            if (sel.has(r.id!)) r.use_count += 1;
+          });
           await updateSettings({ last_selection: ids });
         });
       }

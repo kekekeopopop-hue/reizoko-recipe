@@ -201,5 +201,6 @@ export const SEASONINGS: SeedSeasoning[] = [
   { name: "カレールー", enabled: false },
   { name: "焼肉のたれ", enabled: false },
   { name: "黒酢", enabled: true },
+  { name: "バルサミコ酢", enabled: true },
   { name: "老抽", enabled: true },
 ];

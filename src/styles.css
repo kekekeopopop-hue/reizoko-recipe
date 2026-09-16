@@ -94,12 +94,22 @@ h2 { font-size: 15px; color: var(--muted); font-weight: 600; margin: 20px 0 8px;
 .cats button.on { background: var(--text); color: #fff; border-color: var(--text); }
 
 /* 食材グリッド */
-.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+/* 列は minmax(0, 1fr)。1fr だけだと長い食材名の分だけ列が広がって横スクロールが出る */
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .grid button {
   min-height: 56px; border-radius: var(--radius); background: var(--surface); border: 1.5px solid var(--line);
-  font-weight: 600; font-size: 15px; padding: 6px 4px; line-height: 1.25; word-break: keep-all;
+  font-weight: 600; font-size: 15px; padding: 6px 4px; line-height: 1.25; overflow-wrap: anywhere; min-width: 0;
 }
 .grid button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+/* よく使うの編集モード。角の × をタップ目標にせず、タイル全体で外せるようにする */
+.grid-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: -4px 0 8px; }
+.grid-head .hint { margin: 0; text-align: left; }
+.grid-head .link { flex: none; min-height: 32px; padding: 0 10px; background: none; border: none; color: var(--accent); font-weight: 700; font-size: 15px; }
+.grid.editing button { position: relative; border-style: dashed; }
+.grid.editing button .rm {
+  position: absolute; top: -7px; right: -7px; width: 22px; height: 22px; border-radius: 11px;
+  background: var(--text); color: #fff; font-size: 15px; line-height: 22px; text-align: center;
+}
 .empty { color: var(--muted); text-align: center; padding: 32px 0; }
 
 /* カード */
