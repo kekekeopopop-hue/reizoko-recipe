@@ -1,0 +1,55 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="gPan" x1="487.799" y1="379.266" x2="487.799" y2="700.765" gradientUnits="userSpaceOnUse">
+<stop stop-color="#EC3C57"/>
+<stop offset="0.5" stop-color="#EC3C57"/>
+<stop offset="1" stop-color="#F85F3A"/>
+</linearGradient>
+<linearGradient id="gJoint" x1="630.877" y1="340.771" x2="630.877" y2="410.575" gradientUnits="userSpaceOnUse">
+<stop stop-color="#E61F7C"/>
+<stop offset="0.5" stop-color="#E92E6A"/>
+<stop offset="1" stop-color="#F85F3A"/>
+</linearGradient>
+<linearGradient id="gHandle" x1="721.503" y1="190" x2="721.503" y2="360" gradientUnits="userSpaceOnUse">
+<stop stop-color="#E61F7C"/>
+<stop offset="0.35" stop-color="#EF3F5B"/>
+<stop offset="1" stop-color="#F85F3A"/>
+</linearGradient>
+<linearGradient id="gHeat" x1="487" y1="740" x2="487" y2="840" gradientUnits="userSpaceOnUse">
+<stop stop-color="#EC3C57"/>
+<stop offset="1" stop-color="#F85F3A"/>
+</linearGradient>
+<filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+<feGaussianBlur stdDeviation="28"/>
+</filter>
+</defs>
+
+<rect width="1024" height="1024" fill="#0D0D0D"/>
+
+<!-- 背面のグロー(同じ図形をぼかして重ねる) -->
+<g transform="translate(-122.8 -91.8) scale(1.18)" filter="url(#glow)" opacity="0.4" stroke-width="22" stroke-linecap="round" stroke-linejoin="round">
+<path d="M281.764 548.729C291.881 525.095 311.93 503.571 339.842 486.377C367.755 469.183 402.522 456.941 440.556 450.915C478.59 444.888 518.515 445.295 556.213 452.093C593.911 458.891 628.017 471.834 655.014 489.588" stroke="url(#gPan)"/>
+<path d="M614 337L640 367" stroke="url(#gJoint)"/>
+<path d="M586 386L815 197" stroke="url(#gHandle)" stroke-width="26"/>
+<path d="M242.091 503.177C238.089 525.646 245.642 566.45 255.861 588.041C266.08 609.631 283.074 629.552 305.733 646.5C328.391 663.449 356.203 677.042 387.35 686.393C418.497 695.744 452.277 700.64 486.482 700.763C520.687 700.886 554.545 696.232 585.844 687.105C617.142 677.978 645.175 664.584 668.11 647.799C691.045 631.015 708.365 611.217 718.937 589.701C729.509 568.184 737.141 525.673 733.507 503.177M733.708 508.44C733.708 437.099 623.611 379.266 487.799 379.266C351.988 379.266 241.891 437.099 241.891 508.44C241.891 579.78 351.988 637.613 487.799 637.613C623.611 637.613 733.708 579.78 733.708 508.44Z" stroke="url(#gPan)"/>
+<path d="M393 755C413 780.333 413 807.333 393 836" stroke="url(#gHeat)"/>
+<path d="M487 742C507 773.333 507 803.333 487 832" stroke="url(#gHeat)"/>
+<path d="M581 755C601 780.333 601 807.333 581 836" stroke="url(#gHeat)"/>
+</g>
+
+<!-- 本体。全体を1.18倍に拡大し、少し左へ寄せる -->
+<g transform="translate(-122.8 -91.8) scale(1.18)" stroke-width="22" stroke-linecap="round" stroke-linejoin="round">
+<!-- 内側のハイライト弧(縮小時に溶けないよう薄く) -->
+<path d="M281.764 548.729C291.881 525.095 311.93 503.571 339.842 486.377C367.755 469.183 402.522 456.941 440.556 450.915C478.59 444.888 518.515 445.295 556.213 452.093C593.911 458.891 628.017 471.834 655.014 489.588" stroke="url(#gPan)" opacity="0.55"/>
+<!-- 柄の付け根の帯 -->
+<path d="M614 337L640 367" stroke="url(#gJoint)"/>
+<!-- 柄(リムから伸ばす。本体より少し太く、端は丸) -->
+<path d="M586 386L815 197" stroke="url(#gHandle)" stroke-width="26"/>
+<!-- パン本体(二重リング) -->
+<path d="M242.091 503.177C238.089 525.646 245.642 566.45 255.861 588.041C266.08 609.631 283.074 629.552 305.733 646.5C328.391 663.449 356.203 677.042 387.35 686.393C418.497 695.744 452.277 700.64 486.482 700.763C520.687 700.886 554.545 696.232 585.844 687.105C617.142 677.978 645.175 664.584 668.11 647.799C691.045 631.015 708.365 611.217 718.937 589.701C729.509 568.184 737.141 525.673 733.507 503.177M733.708 508.44C733.708 437.099 623.611 379.266 487.799 379.266C351.988 379.266 241.891 437.099 241.891 508.44C241.891 579.78 351.988 637.613 487.799 637.613C623.611 637.613 733.708 579.78 733.708 508.44Z" stroke="url(#gPan)"/>
+<!-- 加熱の揺らぎ(太さを本体と揃え、端は丸) -->
+<path d="M393 755C413 780.333 413 807.333 393 836" stroke="url(#gHeat)"/>
+<path d="M487 742C507 773.333 507 803.333 487 832" stroke="url(#gHeat)"/>
+<path d="M581 755C601 780.333 601 807.333 581 836" stroke="url(#gHeat)"/>
+</g>
+</svg>
